@@ -5,7 +5,7 @@ const submitBtn = $('#submitBtn');
 const closeMdl = $('#formModal');
 const titleEl = $('#title');
 const dateEl = $('#taskDueDate');
-const descEl = $('#texarea');
+const descEl = $('#textarea');
 
 // Save tasks to local storage
 function saveToStorage(){
@@ -68,13 +68,54 @@ function createTaskCard(task) {
 
 // Todo: create a function to render the task list and make cards draggable
 function renderTaskList() {
-  
+  const tasks = readFromStorage();
+  const todoList = $('#todo-cards');
+  todoList.empty();
+  const inProgressList = $('#in-progress-cards');
+  inProgressList.empty();
+  const doneList = $('#done-cards');
+  doneList.empty();
+  for(let task of tasks){
+    if(task.status === 'to-do'){
+      todoList.append(createTaskCard(task));
+    } else if(task.status === 'in-progress'){
+      inProgressList.append(createTaskCard(task));
+    } else if(task.status === 'done'){
+      doneList.append(createTaskCard(task));
+    }
+  }
+  $('.draggable').draggable({
+    opacity: 0.7,
+    zIndex: 100,
+    helper: function (e){
+      const original = $(e.target).hasClass('ui-draggable')
+      ? $(e.target)
+      : $(e.target).closest('ui-draggable');
+      return original.clone().css({
+        width: original.outerWidth()
+      });
+    }
+  });
 }
 
 // Todo: create a function to handle adding a new task
-function handleAddTask(event){
-  event.preventDefault();
-
+function handleAddTask(){
+  const taskTitle = titleEl.val().trim();
+  const taskDesc = descEl.val();
+  const taskDate = dateEl.val();
+  const newTask = {
+    title: taskTitle,
+    desc: taskDesc,
+    dueDate: taskDate,
+    status: 'to-do'
+  }
+  const tasks = readFromStorage();
+  tasks.push(newTask);
+  saveToStorage(tasks);
+  renderTaskList();
+  titleEl.val('');
+  descEl.val('');
+  dateEl.val('');
 }
 
 // Todo: create a function to handle deleting a task
@@ -91,9 +132,17 @@ function handleDeleteTask(){
 }
 
 // Todo: create a function to handle dropping a task into a new status lane
-function handleDrop(event) {
-  event.preventDefault();
-  
+function handleDrop(event, ui) {
+  const tasks = readFromStorage();
+  const taskId = ui.draggable[0].dataset.taskId;
+  const newStatus = event.target.id;
+  for(let task of tasks){
+    if(task.id === taskId){
+      task.status = newStatus;
+    }
+  }
+  localStorage.setItem('projects', JSON.stringify(tasks));
+  renderTaskList();
 }
 
 // Todo: when the page loads, render the task list, add event listeners, make lanes droppable, and make the due date field a date picker
@@ -102,7 +151,7 @@ $(document).ready(function () {
   renderTaskList();
 // Event listener for submitting task
   submitBtn.on('click', function(){
-    console.log('submitted');
+    handleAddTask();
     $(closeMdl).modal('toggle');
   })
 // Making date selection in modal datepicker
