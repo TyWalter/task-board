@@ -23,8 +23,13 @@ function readFromStorage(){
 }
 
 // Todo: create a function to generate a unique task id
-function generateTaskId() {
-
+function generateTaskId(length) {
+  const characters = ['a','b','c','d','e','f','0','1','2','3','4','5'];
+  let randomResults = '';
+  for(let i=0; i<length; i++){
+    randomResults += characters[Math.floor(Math.random()*characters.length)];
+  }
+  return randomResults; 
 }
 
 // Todo: create a function to create a task card
@@ -77,11 +82,11 @@ function renderTaskList() {
   doneList.empty();
   for(let task of tasks){
     if(task.status === 'to-do'){
-      todoList.append(createTaskCard(task));
+      createTaskCard(task).appendTo(todoList);
     } else if(task.status === 'in-progress'){
-      inProgressList.append(createTaskCard(task));
+      createTaskCard(task).appendTo(inProgressList);
     } else if(task.status === 'done'){
-      doneList.append(createTaskCard(task));
+      createTaskCard(task).appendTo(doneList);
     }
   }
   $('.draggable').draggable({
@@ -90,11 +95,11 @@ function renderTaskList() {
     helper: function (e){
       const original = $(e.target).hasClass('ui-draggable')
       ? $(e.target)
-      : $(e.target).closest('ui-draggable');
+      : $(e.target).closest('.ui-draggable');
       return original.clone().css({
-        width: original.outerWidth()
+        width: original.outerWidth(),
       });
-    }
+    },
   });
 }
 
@@ -107,24 +112,25 @@ function handleAddTask(){
     title: taskTitle,
     desc: taskDesc,
     dueDate: taskDate,
-    status: 'to-do'
+    status: 'to-do',
+    id: generateTaskId(5)
   }
   const tasks = readFromStorage();
   tasks.push(newTask);
   saveToStorage(tasks);
   renderTaskList();
   titleEl.val('');
-  descEl.val('');
   dateEl.val('');
+  descEl.val('');
 }
 
 // Todo: create a function to handle deleting a task
 function handleDeleteTask(){
   const taskId = $(this).attr('data-task-id');
   const tasks = readFromStorage();
-  tasks.forEach((task) => {
+  tasks.forEach((task, i) => {
     if(task.id === taskId){
-      tasks.splice(tasks.indexOf(task), 1);
+      tasks.splice(i, 1);
     }
   });
   saveToStorage(tasks);
@@ -141,7 +147,7 @@ function handleDrop(event, ui) {
       task.status = newStatus;
     }
   }
-  localStorage.setItem('projects', JSON.stringify(tasks));
+  localStorage.setItem('tasks', JSON.stringify(tasks));
   renderTaskList();
 }
 
