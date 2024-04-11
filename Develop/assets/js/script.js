@@ -8,7 +8,7 @@ const dateEl = $('#taskDueDate');
 const descEl = $('#textarea');
 
 // Save tasks to local storage
-function saveToStorage(){
+function saveToStorage(tasks){
   localStorage.setItem('tasks', JSON.stringify(tasks));
 }
 
